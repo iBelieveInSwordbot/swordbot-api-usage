@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Swordbot API Usage</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Roboto+Mono:wght@400;500&family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+<script src="snapshot.js"></script>
+</head>
+<body class="theme-dark">
+
+<aside class="rail">
+  <div class="rail-logo">
+    <span class="rail-emoji">🗡️</span>
+  </div>
+  <nav class="rail-nav">
+    <button class="rail-item active" data-section="overview" aria-label="Overview">
+      <span class="material-symbols-rounded">dashboard</span>
+      <span class="rail-label">Overview</span>
+    </button>
+    <button class="rail-item" data-section="providers" aria-label="Providers">
+      <span class="material-symbols-rounded">cloud</span>
+      <span class="rail-label">Providers</span>
+    </button>
+    <button class="rail-item" data-section="alerts-section" aria-label="Alerts">
+      <span class="material-symbols-rounded">notifications</span>
+      <span class="rail-label">Alerts</span>
+      <span class="rail-badge" id="rail-alert-badge" hidden>0</span>
+    </button>
+    <button class="rail-item" data-section="usage" aria-label="Usage">
+      <span class="material-symbols-rounded">insights</span>
+      <span class="rail-label">Usage</span>
+    </button>
+  </nav>
+  <div class="rail-foot">
+    <button class="rail-item" id="theme-toggle" aria-label="Toggle theme">
+      <span class="material-symbols-rounded" id="theme-icon">light_mode</span>
+    </button>
+  </div>
+</aside>
+
+<header class="appbar">
+  <div class="appbar-title">
+    <h1>API Usage</h1>
+    <p class="subtitle">Spend, quotas & alerts across your AI providers</p>
+  </div>
+  <div class="appbar-actions">
+    <span class="updated" id="last-updated"></span>
+    <button class="btn btn-tonal" id="poll-now">
+      <span class="material-symbols-rounded">refresh</span>
+      Poll now
+    </button>
+  </div>
+</header>
+
+<main>
+  <!-- ===== OVERVIEW ===== -->
+  <section id="overview" class="content active">
+    <div class="kpi-grid">
+      <div class="card kpi kpi-hero">
+        <div class="kpi-head">
+          <span class="material-symbols-rounded">payments</span>
+          <span class="kpi-label">Month-to-date spend</span>
+        </div>
+        <div class="kpi-value" id="kpi-spend">$0.00</div>
+        <div class="kpi-sub" id="kpi-spend-sub">—</div>
+        <div class="kpi-bar">
+          <div class="kpi-bar-fill" id="kpi-spend-bar"></div>
+        </div>
+      </div>
+
+      <div class="card kpi">
+        <div class="kpi-head">
+          <span class="material-symbols-rounded">bolt</span>
+          <span class="kpi-label">Requests (24h)</span>
+        </div>
+        <div class="kpi-value" id="kpi-requests">0</div>
+        <div class="kpi-sub" id="kpi-requests-sub">across all providers</div>
+        <canvas class="kpi-spark" id="kpi-spark-requests" width="280" height="48"></canvas>
+      </div>
+
+      <div class="card kpi">
+        <div class="kpi-head">
+          <span class="material-symbols-rounded">trending_up</span>
+          <span class="kpi-label">Burn rate</span>
+        </div>
+        <div class="kpi-value" id="kpi-burn">—</div>
+        <div class="kpi-sub" id="kpi-burn-sub">based on last 24h</div>
+        <canvas class="kpi-spark" id="kpi-spark-spend" width="280" height="48"></canvas>
+      </div>
+
+      <div class="card kpi">
+        <div class="kpi-head">
+          <span class="material-symbols-rounded">notifications_active</span>
+          <span class="kpi-label">Active alerts</span>
+        </div>
+        <div class="kpi-value" id="kpi-alerts">0</div>
+        <div class="kpi-sub" id="kpi-alerts-sub">last 24h</div>
+        <div class="alert-pills" id="alert-pills"></div>
+      </div>
+    </div>
+
+    <div class="card chart-card">
+      <div class="card-head">
+        <div>
+          <h2>Spend over the last 7 days</h2>
+          <p class="hint">Stacked area · per-provider · auto-refreshing</p>
+        </div>
+        <div class="seg" id="range-toggle" role="tablist">
+          <button data-hours="24" role="tab">24h</button>
+          <button data-hours="72" role="tab">3d</button>
+          <button data-hours="168" role="tab" class="active">7d</button>
+          <button data-hours="720" role="tab">30d</button>
+        </div>
+      </div>
+      <canvas id="spend-chart" width="1200" height="320"></canvas>
+      <div class="legend" id="spend-legend"></div>
+    </div>
+
+    <div class="two-col">
+      <div class="card chart-card">
+        <div class="card-head">
+          <div>
+            <h2>Provider mix</h2>
+            <p class="hint">Share of MTD spend</p>
+          </div>
+        </div>
+        <div class="donut-wrap">
+          <canvas id="donut-chart" width="320" height="320"></canvas>
+          <div class="donut-center">
+            <div class="donut-label">Total</div>
+            <div class="donut-value" id="donut-total">$0.00</div>
+          </div>
+        </div>
+        <div class="legend" id="donut-legend"></div>
+      </div>
+
+      <div class="card chart-card">
+        <div class="card-head">
+          <div>
+            <h2>Requests per day</h2>
+            <p class="hint">Last 7 days · grouped bars</p>
+          </div>
+        </div>
+        <canvas id="bars-chart" width="600" height="280"></canvas>
+        <div class="legend" id="bars-legend"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PROVIDERS ===== -->
+  <section id="providers" class="content">
+    <div class="card-grid" id="provider-cards"></div>
+  </section>
+
+  <!-- ===== ALERTS ===== -->
+  <section id="alerts-section" class="content">
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <h2>Alerts</h2>
+          <p class="hint">Budget thresholds, anomalies, and fetch errors</p>
+        </div>
+      </div>
+      <div id="alerts-list"></div>
+    </div>
+  </section>
+
+  <!-- ===== USAGE ===== -->
+  <section id="usage" class="content">
+    <div class="card chart-card">
+      <div class="card-head">
+        <div>
+          <h2>Token throughput</h2>
+          <p class="hint">Input vs output tokens · last 24h snapshot</p>
+        </div>
+      </div>
+      <canvas id="tokens-chart" width="900" height="280"></canvas>
+      <div class="legend" id="tokens-legend"></div>
+    </div>
+    <div class="card chart-card">
+      <div class="card-head">
+        <div>
+          <h2>Latency by provider</h2>
+          <p class="hint">Average response time</p>
+        </div>
+      </div>
+      <canvas id="latency-chart" width="900" height="220"></canvas>
+    </div>
+  </section>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
