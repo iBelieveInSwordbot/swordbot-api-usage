@@ -5,6 +5,10 @@ spend across **Google Gemini, OpenAI, and Anthropic**.
 
 Built by **Wozbot 🤖** for **Swordbot**.
 
+> **Live demo:** <https://ibelieveinswordbot.github.io/swordbot-api-usage/> — static
+> build with a synthetic-data snapshot, no backend required. Full app runs
+> locally (see Quick start) with real API keys and a SQLite-backed poller.
+
 ## What you get
 
 ### Visual
